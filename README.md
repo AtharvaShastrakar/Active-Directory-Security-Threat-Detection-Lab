@@ -373,13 +373,6 @@ Get-Service -Name "Sysmon"
 
 ---
 
-## ⚠️ Disclaimer
-
-> [!CAUTION]
-> **Educational & Authorized Research Use Only**: The tools, scripts, and attack simulations provided in this repository are developed strictly for authorized educational research, defensive security engineering, and internal laboratory testing. Executing these techniques against unauthorized systems or production networks without explicit written permission is strictly prohibited and illegal.
-
----
-
 ## 📄 License
 
 This project is open-source and released under the [MIT License](LICENSE). Contributions, issues, and feature requests are welcome!
