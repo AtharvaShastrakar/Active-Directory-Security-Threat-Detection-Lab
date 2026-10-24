@@ -1,0 +1,89 @@
+<Sysmon schemaversion="4.90">
+  <!-- Sysmon telemetry configuration designed for AD Lab & EDR Evasion Testing -->
+  <HashAlgorithms>md5,sha256,IMPHASH</HashAlgorithms>
+  <CheckRevocation/>
+  <EventFiltering>
+    <!-- Event 1: Process Creation -->
+    <RuleGroup name="ProcessCreation" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- Suspicious living-off-the-land binaries (LOLBINs) -->
+        <Image condition="image">powershell.exe</Image>
+        <Image condition="image">pwsh.exe</Image>
+        <Image condition="image">cmd.exe</Image>
+        <Image condition="image">wmic.exe</Image>
+        <Image condition="image">mshta.exe</Image>
+        <Image condition="image">cscript.exe</Image>
+        <Image condition="image">wscript.exe</Image>
+        <Image condition="image">rundll32.exe</Image>
+        <Image condition="image">regsvr32.exe</Image>
+        <Image condition="image">certutil.exe</Image>
+        <Image condition="image">vssadmin.exe</Image>
+        <Image condition="image">nltest.exe</Image>
+        <Image condition="image">net.exe</Image>
+        <Image condition="image">net1.exe</Image>
+        <Image condition="image">whoami.exe</Image>
+        <Image condition="image">klist.exe</Image>
+        <!-- Lateral Movement execution tools -->
+        <ParentImage condition="image">wmiprvse.exe</ParentImage>
+        <ParentImage condition="image">wsmprovhost.exe</ParentImage>
+        <ParentImage condition="image">services.exe</ParentImage>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Event 3: Network Connection Detected -->
+    <RuleGroup name="NetworkConnections" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <DestinationPort condition="is">445</DestinationPort>   <!-- SMB -->
+        <DestinationPort condition="is">135</DestinationPort>   <!-- RPC -->
+        <DestinationPort condition="is">88</DestinationPort>    <!-- Kerberos -->
+        <DestinationPort condition="is">389</DestinationPort>   <!-- LDAP -->
+        <DestinationPort condition="is">636</DestinationPort>   <!-- LDAPS -->
+        <DestinationPort condition="is">5985</DestinationPort>  <!-- WinRM HTTP -->
+        <DestinationPort condition="is">5986</DestinationPort>  <!-- WinRM HTTPS -->
+        <DestinationPort condition="is">3389</DestinationPort>  <!-- RDP -->
+        <Image condition="image">powershell.exe</Image>
+        <Image condition="image">cmd.exe</Image>
+        <Image condition="image">rundll32.exe</Image>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Event 7: Image Loaded (DLLs) -->
+    <RuleGroup name="ImageLoads" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <!-- Detect unmanaged PowerShell or CLR loading in non-standard processes -->
+        <ImageLoaded condition="contains">clrjit.dll</ImageLoaded>
+        <ImageLoaded condition="contains">amsi.dll</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- Event 8: CreateRemoteThread (Process Injection) -->
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <!-- Exclude known system binaries if necessary -->
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- Event 10: ProcessAccess (LSASS Credential Dumping / Mimikatz) -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="image">lsass.exe</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Event 17 & 18: PipeEvent (Named Pipes for PsExec, Cobalt Strike, Metasploit) -->
+    <RuleGroup name="PipeEvents" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="contains">psexec</PipeName>
+        <PipeName condition="contains">paexec</PipeName>
+        <PipeName condition="contains">remcom</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- Event 22: DNS Query -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <QueryName condition="end with">.adlab.test</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>
